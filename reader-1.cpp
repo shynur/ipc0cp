@@ -29,7 +29,7 @@ int main() {
 
     while (shm.c_str[0] == '\0')
         continue;
-         
+
     std::cout << "开始读... "
               << shm.c_str
               << std::endl;

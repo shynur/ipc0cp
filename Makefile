@@ -30,7 +30,7 @@ clean:
 
 .PHONY: git
 git:
-	# 不需要 clean, 因为编译产物已经被 gitignore'd 了.
-	# make clean
+	@# 不需要 clean, 因为编译产物已经被 gitignore'd 了.
+	@# make clean
 	git commit -a -v
 	git push
