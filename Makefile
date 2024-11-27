@@ -12,11 +12,10 @@ EXECUTABLES = writer.exe $(basename $(READER_SRCS)).exe
 .SILENT: test
 test: $(EXECUTABLES)
 	echo
-	for reader in reader-?.exe;  \
-	    do ./$$reader &          \
+	for reader in reader-?.exe; do  \
+	    ./$$reader &                \
 	done
 	./writer.exe  ||  true
-	echo
 
 writer.exe: $(WRITER_SRC) $(HEADERS)
 	$(CXX) $(CXXFLAGS) $< $(LDFLAGS) -o $@
@@ -28,3 +27,10 @@ reader-%.exe: reader-%.cpp $(HEADERS)
 .PHONY: clean
 clean:
 	rm -f $(EXECUTABLES)
+
+.PHONY: git
+git:
+	# 不需要 clean, 因为编译产物已经被 gitignore'd 了.
+	# make clean
+	git commit -a -v
+	git push

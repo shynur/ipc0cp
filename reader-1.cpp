@@ -5,7 +5,8 @@
 #include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
- 
+
+
 int main() {
     struct ShM {
         char *const c_str = []{
@@ -17,6 +18,7 @@ int main() {
             }();
  
             void *const addr = mmap(nullptr, SHM_SIZE, PROT_READ, MAP_SHARED, fd, 0);
+            close(fd);  // 映射完立即关闭, 对后续操作没啥影响.
             assert("映射共享内存" && addr != MAP_FAILED);
 
             return static_cast<char *>(addr);
