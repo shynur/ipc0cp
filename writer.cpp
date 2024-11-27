@@ -29,6 +29,6 @@ int main() {
 
     std::cout << "开始写... ";
     std::strncpy(shm.c_str, "Hello, readers!", SHM_SIZE);
-    std::cout << "写好了, 按 Enter 退出...";
+    std::cout << "写好了, 按 Enter 退出... " << std::endl;
     std::cin.get();
 }
