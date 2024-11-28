@@ -1,4 +1,5 @@
 #include <sys/mman.h>
+#include "./laser.pb.h"
 
 
 constexpr auto SHM_NAME = "/Wryyyyyy";

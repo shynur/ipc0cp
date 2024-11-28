@@ -1,10 +1,11 @@
 #include "./ipc0cp.hpp"
-#include <cassert>
+
+#include <fcntl.h>  // O_RDONLY
+#include <unistd.h>
 
 #include <iostream>
 #include <cstring>
-#include <fcntl.h>
-#include <unistd.h>
+#include <cassert>
 
 
 int main() {
@@ -12,8 +13,9 @@ int main() {
         char *const c_str = []{
             const int fd = []{
                 int fd;
-                while ((fd = shm_open(SHM_NAME, O_RDONLY, 0666)) == -1)
-                    continue;
+                do {
+                    fd = shm_open(SHM_NAME, O_RDONLY, 0666);
+                } while (fd == -1);
                 return fd;
             }();
  
@@ -30,7 +32,10 @@ int main() {
     while (shm.c_str[0] == '\0')
         continue;
 
-    std::cout << "开始读... "
-              << shm.c_str
-              << std::endl;
+    std::cout << "reader: 开始读\n"
+              << "reader: \n" + [&shm]{
+                  rbk4::Message_Laser msg;
+                  msg.ParseFromArray(static_cast<const void *>(shm.c_str), SHM_SIZE);
+                  return msg.DebugString();
+              }() + '\n';
 }

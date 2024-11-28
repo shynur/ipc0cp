@@ -1,10 +1,12 @@
+SHELL = bash
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra
-LDFLAGS = -lrt
+LDFLAGS = -lrt -lprotobuf
 
 HEADERS = ipc0cp.hpp
 WRITER_SRC = writer.cpp
-READER_SRCS = reader-1.cpp  
+READER_SRCS = reader-1.cpp
+PB_MSGS = laser
 EXECUTABLES = writer.exe $(basename $(READER_SRCS)).exe
 
 
@@ -17,16 +19,32 @@ test: $(EXECUTABLES)
 	done
 	./writer.exe  ||  true
 
-writer.exe: $(WRITER_SRC) $(HEADERS)
-	$(CXX) $(CXXFLAGS) $< $(LDFLAGS) -o $@
+writer.exe: writer.o $(PB_MSGS).pb.o
+	$(CXX) $^ $(LDFLAGS) -o $@
 
-reader-%.exe: reader-%.cpp $(HEADERS)
-	$(CXX) $(CXXFLAGS) $< $(LDFLAGS) -o $@
+reader-%.exe: reader-%.o $(PB_MSGS).pb.o
+	$(CXX) $^ $(LDFLAGS) -o $@
+
+writer.o: $(WRITER_SRC) $(HEADERS) $(PB_MSGS).pb.h
+	$(CXX) -c $(CXXFLAGS) $< -o $@
+
+reader-%.o: reader-%.cpp $(HEADERS) $(PB_MSGS).pb.h
+	$(CXX) -c $(CXXFLAGS) $< -o $@
+
+%.pb.h %.pb.cc: %.proto
+	make protobuf
+
+%.pb.o: %.pb.h %pb.cc
+	for msg in $(PB_MSGS); do             \
+	    g++ -c $$msg.pb.cc -o $$msg.pb.o  \
+	done
 
 
 .PHONY: clean
 clean:
 	rm -f $(EXECUTABLES)
+	rm -f ?*.o
+	rm -f ?*.pb.{h,cc}
 
 .PHONY: git
 git:
@@ -34,3 +52,7 @@ git:
 	@# make clean
 	git commit -a -v
 	git push
+
+.PHONY: protobuf
+protobuf:
+	protoc --cpp_out=. ?*.proto

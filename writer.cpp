@@ -1,11 +1,11 @@
 #include "./ipc0cp.hpp"
-#include <cassert>
 
-#include <iostream>
-#include <cstring>
 #include <fcntl.h>  // O_{CREAT,RDWR,RDONLY}
 #include <unistd.h>
 
+#include <iostream>
+#include <cstring>
+#include <cassert>
 
 int main() {
     const struct ShM {
@@ -14,6 +14,7 @@ int main() {
             assert("打开共享内存" && fd != -1);
 
             assert("设置共享内存大小" && ftruncate(fd, SHM_SIZE) != -1);
+            //                           ^^^^^^^^^^^^^^^^^^^^^^^
 
             void *const addr = mmap(nullptr, SHM_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
             close(fd);  // 映射完立即关闭, 对后续操作没啥影响.
@@ -35,8 +36,7 @@ int main() {
         }
     } shm;
 
-    std::cout << "开始写... ";
-    std::strncpy(shm.c_str, "Hello, readers!", SHM_SIZE);
-    std::cout << "写好了, 按 Enter 退出... " << std::endl;
-    std::cin.get();
+    std::cout << "writer: 开始写\n";
+    rbk4::Message_Laser{}.SerializeToArray(shm.c_str, SHM_SIZE);
+    std::cout << "writer: 写好了\n";
 }
