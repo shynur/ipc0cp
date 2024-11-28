@@ -6,6 +6,8 @@
 #include <iostream>
 #include <cstring>
 #include <cassert>
+#include <type_traits>
+
 
 int main() {
     const struct ShM {
@@ -36,18 +38,37 @@ int main() {
         }
     } shm;
 
+    google::protobuf::Arena arena{[&shm]{
+        google::protobuf::ArenaOptions options;
+
+        // 把 11th 字节往后的区域分配给 Arena.
+        options.initial_block = shm.c_str + 100,
+        options.initial_block_size = SHM_SIZE - 100;
+
+        constexpr auto never = +[] [[noreturn]] { 
+            assert(false && "Arena 不应该 realloc");
+        };
+        options.block_alloc = +[](std::size_t) -> void * { never(); },
+        options.block_dealloc = +[](void *, std::size_t) { never(); };
+
+        return options;
+    }()};
+
     // 等待读者.
     for (volatile auto& flag = shm.c_str[0]; flag == 0; )
         continue;
 
     std::cout << "writer: 开始写\n";
     {
-        rbk4::Message_Laser msg;
-        msg.mutable_header()->set_sequence(996);
-        msg.SerializeToArray(shm.c_str+2, SHM_SIZE-2);
+        const auto msg = rbk4::Message_Laser{}.New(&arena);
+        msg->mutable_header()->set_sequence(996);
 
+        *reinterpret_cast<std::size_t *>(shm.c_str + 2)
+            = reinterpret_cast<char *>(msg) - shm.c_str;
+        std::cerr << msg << " : " << static_cast<void *>(shm.c_str) << '\n'; ////////////
+        // 告诉 reader 可以读数据了.
         volatile auto& flag = shm.c_str[1];
-        flag = 1;  // 告诉 reader 可以读数据了.
+        flag = 1;
     }
     std::cout << "writer: 写好了\n";
 }

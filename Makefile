@@ -1,6 +1,6 @@
 SHELL = bash
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -Og
+CXXFLAGS = -std=c++17 -Wall -Wextra -Wno-return-type -Og
 LDFLAGS = -lrt -lprotobuf
 
 READERS = reader-1

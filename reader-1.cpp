@@ -43,9 +43,12 @@ int main() {
         continue;
 
     std::cout << "reader: 开始读\n"
-              << "reader: \n\n" + [&shm]{
-                  rbk4::Message_Laser msg;
-                  msg.ParseFromArray(static_cast<const void *>(shm.c_str+2), SHM_SIZE-2);
-                  return msg.DebugString();
-              }() + '\n';
+              << "reader: \n\n" 
+                     + [&shm]{
+                         const auto offset = *reinterpret_cast<std::size_t *>(shm.c_str + 2);
+                         const auto msg = reinterpret_cast<rbk4::Message_Laser *>(shm.c_str + offset);
+                         std::cerr << offset << " : " << msg << '\n'; //////////////
+                         return msg;
+                     }()->DebugString()
+                     + '\n';
 }
