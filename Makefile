@@ -1,6 +1,6 @@
 SHELL = bash
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra
+CXXFLAGS = -std=c++17 -Wall -Wextra -O0
 LDFLAGS = -lrt -lprotobuf
 
 HEADERS = ipc0cp.hpp
@@ -34,10 +34,8 @@ reader-%.o: reader-%.cpp $(HEADERS) $(PB_MSGS).pb.h
 %.pb.h %.pb.cc: %.proto
 	make protobuf
 
-%.pb.o: %.pb.h %pb.cc
-	for msg in $(PB_MSGS); do             \
-	    g++ -c $$msg.pb.cc -o $$msg.pb.o  \
-	done
+%.pb.o: %pb.cc %.pb.h
+	$(CXX) -c $(CXXFLAGS) $< -o $@
 
 
 .PHONY: clean

@@ -37,6 +37,7 @@ int main() {
     } shm;
 
     std::cout << "writer: 开始写\n";
-    rbk4::Message_Laser{}.SerializeToArray(shm.c_str, SHM_SIZE);
+    rbk4::Message_Laser{}.SerializeToArray(shm.c_str+1, SHM_SIZE);
+    shm.c_str[0] = 1;
     std::cout << "writer: 写好了\n";
 }

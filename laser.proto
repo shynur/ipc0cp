@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package rbk4;
+
+message Message_Header {
+  string channel = 1;
+  uint64 sequence = 2;
+  uint64 timestamp = 3;
+}
+
+message Message_LaserInstallInfo {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+  double roll = 4;
+  double pitch = 5;
+  double yaw = 6;
+  bool upside = 7;
+}
+
+message Message_LaserDeviceInfo {
+  string device_name = 1;
+  string device_brand = 2;
+  bool has_2d_data = 3;
+  bool has_3d_data = 4;
+  bool has_imu_data = 5;
+  uint32 laser_type = 6;
+}
+
+message Message_Laser2DParams {
+  float min_range = 1;
+  float max_range = 2;
+  float min_angle = 3;
+  float max_angle = 4;
+  float real_step = 5;
+  float pub_step = 6;
+  float time_increment = 7;
+  float scan_freq = 8;
+  bool clock_wise = 9;
+}
+
+message Message_Laser3DParams {
+  float min_range = 1;
+  float max_range = 2;
+}
+
+message Message_Beam {
+  float angle = 1;
+  float dist = 2;
+  float x = 3;
+  float y = 4;
+  float rssi = 5;
+  bool valid = 6;
+}
+
+message Message_Laser {
+  Message_Header header = 1;
+  Message_LaserDeviceInfo device_info = 2;
+  Message_LaserInstallInfo install_info = 3;
+  Message_Laser2DParams params = 4;
+  repeated Message_Beam beams = 5;
+}
+
+message Message_Beam3D {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+  float intensity = 4;
+  uint32 ring = 5;
+  uint32 offset_time = 6;
+  uint32 data = 7;
+}
+
+message Message_Beam3DLite {
+  bytes raw_data = 1;
+  uint32 timestamp = 2;
+  float first_azimuth = 3;
+  float second_azimuth = 4;
+}
+
+message Message_Beam3DCompact {
+  float factor = 1;
+  repeated Message_Beam3DLite beams = 2;
+  repeated float azimuth_correction = 3;
+  repeated float vertical_correction = 4;
+}
+
+message Message_PointCloudData {
+  uint32 type = 1;
+  bytes data = 2;
+}
+
+message Message_Laser3D {
+  Message_Header header = 1;
+  Message_LaserDeviceInfo device_info = 3;
+  Message_LaserInstallInfo install_info = 4;
+  Message_Laser3DParams params = 5;
+  Message_PointCloudData pc_data = 6;
+  Message_Beam3DCompact beams_3d_compact = 7;
+}
