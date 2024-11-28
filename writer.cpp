@@ -41,7 +41,7 @@ int main() {
     google::protobuf::Arena arena{[&shm]{
         google::protobuf::ArenaOptions options;
 
-        // 把 11th 字节往后的区域分配给 Arena.
+        // 把 100th 字节往后的区域分配给 Arena.
         options.initial_block = shm.c_str + 100,
         options.initial_block_size = SHM_SIZE - 100;
 
@@ -61,11 +61,13 @@ int main() {
     std::cout << "writer: 开始写\n";
     {
         const auto msg = rbk4::Message_Laser{}.New(&arena);
-        msg->mutable_header()->set_sequence(996);
 
+        std::cerr << msg << " : " << static_cast<void *>(shm.c_str) << '\n';
+
+        msg->mutable_header()->set_sequence(996);
         *reinterpret_cast<std::size_t *>(shm.c_str + 2)
             = reinterpret_cast<char *>(msg) - shm.c_str;
-        std::cerr << msg << " : " << static_cast<void *>(shm.c_str) << '\n'; ////////////
+
         // 告诉 reader 可以读数据了.
         volatile auto& flag = shm.c_str[1];
         flag = 1;

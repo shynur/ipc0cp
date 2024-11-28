@@ -1,8 +1,12 @@
+# Emacs-generated:
 ?*~
 .#?*#
 #?*#
+
 /.vscode/
+
+?*.o
 ?*.exe
+
 ?*.pb.h
 ?*.pb.cc
-?*.o
