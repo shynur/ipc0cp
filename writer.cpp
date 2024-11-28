@@ -36,8 +36,18 @@ int main() {
         }
     } shm;
 
+    // 等待读者.
+    for (volatile auto& flag = shm.c_str[0]; flag == 0; )
+        continue;
+
     std::cout << "writer: 开始写\n";
-    rbk4::Message_Laser{}.SerializeToArray(shm.c_str+1, SHM_SIZE);
-    shm.c_str[0] = 1;
+    {
+        rbk4::Message_Laser msg;
+        msg.mutable_header()->set_sequence(996);
+        msg.SerializeToArray(shm.c_str+2, SHM_SIZE-2);
+
+        volatile auto& flag = shm.c_str[1];
+        flag = 1;  // 告诉 reader 可以读数据了.
+    }
     std::cout << "writer: 写好了\n";
 }

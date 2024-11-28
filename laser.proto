@@ -3,9 +3,9 @@ syntax = "proto3";
 package rbk4;
 
 message Message_Header {
-  string channel = 1;
+  //string channel = 1;
   uint64 sequence = 2;
-  uint64 timestamp = 3;
+  //uint64 timestamp = 3;
 }
 
 message Message_LaserInstallInfo {
@@ -55,10 +55,10 @@ message Message_Beam {
 
 message Message_Laser {
   Message_Header header = 1;
-  Message_LaserDeviceInfo device_info = 2;
-  Message_LaserInstallInfo install_info = 3;
-  Message_Laser2DParams params = 4;
-  repeated Message_Beam beams = 5;
+  //Message_LaserDeviceInfo device_info = 2;
+  //Message_LaserInstallInfo install_info = 3;
+  //Message_Laser2DParams params = 4;
+  //repeated Message_Beam beams = 5;
 }
 
 message Message_Beam3D {
