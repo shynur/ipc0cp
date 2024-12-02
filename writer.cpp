@@ -26,14 +26,15 @@ int main() {
 
     std::cerr << "writer: 开始写\n";
     {
-        const auto msg = arena->CreateMessage<rbk4::Message_Header>(arena);
-        msg->set_timestamp(996);
+        const auto msg = arena->CreateMessage<rbk4::Message_Laser>(arena);
+        msg->mutable_header()->set_timestamp(996),
+        msg->mutable_header()->set_channel("007 12345678");
 
         // 把 msg 的 offset 放在 32nd 处:
         *static_cast<std::size_t *>(shm.start + 32)
           = reinterpret_cast<char *>(msg) - reinterpret_cast<char *>(shm.start);
 
-        shm[0] = 1;  // 告诉 reader 可以读数据了.
+        static_cast<volatile std::uint8_t&>(shm[0]) = 1;  // 告诉 reader 可以读数据了.
     }
     std::cerr << "writer: 写好了\n";
 

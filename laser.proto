@@ -5,7 +5,7 @@ package rbk4;
 
 
 message Message_Header {
-  // string channel = 1;
+  string channel = 1;
   // uint64 sequence = 2;
   uint64 timestamp = 3;
 }
