@@ -40,7 +40,7 @@ struct ShM {
                 if (fstat(fd, &fshm); fshm.st_size)
                     break;
 
-        const auto result_mmap = mmap(start, this->len, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, fd, 0);
+        const auto *const result_mmap = mmap(start, this->len, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, fd, 0);
         close(fd);  // 映射完立即关闭, 对后续操作没啥影响.
         assert("映射共享内存" && result_mmap != MAP_FAILED);
 

@@ -1,17 +1,35 @@
 #include "./ipc0cp.hpp"
 #include "./laser.pb.h"
 
-#include <iostream>
+#include <cstdio>
+#include <type_traits>
 
+
+ShM shm{INIT_OPTIONS.shm_name, INIT_OPTIONS.map_at, true};
+
+void send(const auto *const msg) {
+    std::fprintf(stderr, "writer: 开始写 %p\n", msg);
+
+    // 把 msg 的 offset 放在 shm[32] 处:
+    *static_cast<std::size_t *>(shm.start + 32)
+        = reinterpret_cast<char *>(const_cast<std::decay_t<decltype(*msg)> *>(msg))
+          - reinterpret_cast<char *>(shm.start);
+
+    static_cast<volatile std::uint8_t&>(shm[0]) = 1;  // 告诉 reader 可以读数据了.
+
+    std::fprintf(stderr, "writer: 写好了 %p\n", msg);
+
+    // 等 reader 读完.
+    while (static_cast<volatile std::uint8_t&>(shm[0]))
+        continue;
+}
 
 int main() {
-    ShM shm{INIT_OPTIONS.shm_name, INIT_OPTIONS.map_at, true};
-
-    // Arena 放到 256th byte 处.
-    const auto arena = new(&shm[256]) google::protobuf::Arena{[&shm]{
+    // Arena 放到 shm[256] 处.
+    auto *const arena = new(&shm[256]) google::protobuf::Arena{[]{
         google::protobuf::ArenaOptions options;
 
-        // 把 512nd 字节往后的区域分配给 Arena.
+        // 把 shm[512+] 的区域分配给 Arena.
         options.initial_block = reinterpret_cast<char *>(&shm[512]),
         options.initial_block_size = shm.len - 512;
 
@@ -24,21 +42,24 @@ int main() {
         return options;
     }()};
 
-    std::cerr << "writer: 开始写\n";
-    {
-        const auto msg = arena->CreateMessage<rbk4::Message_Laser>(arena);
-        msg->mutable_header()->set_timestamp(996),
-        msg->mutable_header()->set_channel("007 12345678");
+    // 测试被直接包含的 non-string 字段:
+    const auto test_direct_u64 = arena->CreateMessage<rbk4::Message_Header>(arena);
+    test_direct_u64->set_timestamp(996);
+    send(test_direct_u64);
+    test_direct_u64->bs();
+    test_direct_u64->channel();
 
-        // 把 msg 的 offset 放在 32nd 处:
-        *static_cast<std::size_t *>(shm.start + 32)
-          = reinterpret_cast<char *>(msg) - reinterpret_cast<char *>(shm.start);
+    // 测试被间接包含的 non-string 字段:
+    const auto test_indirect_u64 = arena->CreateMessage<rbk4::Message_Laser>(arena);
+    test_indirect_u64->mutable_header()->set_timestamp(007);
+    send(test_indirect_u64);
 
-        static_cast<volatile std::uint8_t&>(shm[0]) = 1;  // 告诉 reader 可以读数据了.
+    // 测试被间接包含的 repeated 字段:
+    const auto test_indirect_repeared = arena->CreateMessage<rbk4::Message_Laser>(arena);
+    for (auto i = 0; i != 10; ++i) {
+        const auto beam = test_indirect_repeared->add_beams();
+        beam->set_angle(i * 10),
+        beam->set_valid(i % 2);
     }
-    std::cerr << "writer: 写好了\n";
-
-    // 等 reader 读完.
-    while (static_cast<volatile std::uint8_t&>(shm[1]) == 0)
-        continue;
+    send(test_indirect_repeared);
 }

@@ -1,6 +1,7 @@
 SHELL = bash
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O0 -g3 -ggdb \
+CXXFLAGS = -std=c++17 -Wall -Wextra -O0 -g3 -ggdb  \
+		   -fconcepts  \
            -Wno-pointer-arith -Wno-return-type -Wno-unused-parameter
 LDFLAGS = -lrt -lprotobuf
 
