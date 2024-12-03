@@ -8,7 +8,7 @@
 
 ShM shm{INIT_OPTIONS.shm_name, INIT_OPTIONS.map_at};
 
-template <class rbk_msg_t> const rbk_msg_t& receive() {
+template <class protobuf_msg_t> const protobuf_msg_t& receive() {
     // 等待数据到来.
     while (static_cast<volatile std::uint8_t&>(shm[0]) == 0)
         continue;
@@ -17,7 +17,7 @@ template <class rbk_msg_t> const rbk_msg_t& receive() {
     const auto offset = *static_cast<std::size_t *>(shm.start + 32);
     static_cast<volatile std::uint8_t&>(shm[0]) = 0;  // 告诉 writer 我读完了.
 
-    const auto& msg = *static_cast<rbk_msg_t *>(shm.start + offset);
+    const auto& msg = *static_cast<protobuf_msg_t *>(shm.start + offset);
     std::fprintf(stderr, "reader: 读好了 %p\n", &msg);
     return msg;
 }

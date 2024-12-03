@@ -5,6 +5,7 @@
 #include <unistd.h>  // ftruncate
 #include <string_view>
 #include <string>
+#include <cstring>
 
 
 // Writer 和 readers 需要事先约定好共享内存的位置:
@@ -18,7 +19,7 @@ template<bool creat = false>
 struct ShM {
     const std::string name;
     void *const start;  // 共享内存要映射到进程地址空间的位置.
-    std::size_t len = 4096;  // 只有 writer 需要关心 length.
+    std::size_t len = 4096;  // 只有 writer 需要关心 length; 必须是页表大小的整数倍.
 
     ShM(const std::string_view name, void *const start): name{name}, start{start} {
         const auto fd = [name=this->name.c_str()]{
@@ -44,8 +45,10 @@ struct ShM {
         close(fd);  // 映射完立即关闭, 对后续操作没啥影响.
         assert("映射共享内存" && result_mmap != MAP_FAILED);
 
-        // 不需要清零, 因为 `ftruncate' 自带清零行为.
-        // std::memset(c_str, 0, SHM_SIZE);
+        // 实际不需要清零, 因为 `ftruncate' 自带清零行为.
+        std::memset(start, 0, this->len);
+        // 但在测试的时候, 可能出现因 bug 导致 reader/writer 未能退出,
+        // 持续写入新的数据, 扰乱测试结果.  所以暂且留着.
     }
 
     ~ShM() {

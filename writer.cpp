@@ -27,7 +27,7 @@ void send(const auto& msg) {
 
 int main() {
     // Arena 放到 shm[256] 处.
-    auto *const arena = new(&shm[256]) google::protobuf::Arena{[]{
+    auto& arena = *new(&shm[256]) google::protobuf::Arena{[]{
         google::protobuf::ArenaOptions options;
 
         // 把 shm[512+] 的区域分配给 Arena.
@@ -44,17 +44,17 @@ int main() {
     }()};
 
     // 测试被直接包含的 non-string 字段:
-    auto& test_direct_u64 = *arena->CreateMessage<rbk4::Message_Header>(arena);
+    auto& test_direct_u64 = *arena.CreateMessage<rbk4::Message_Header>(&arena);
     test_direct_u64.set_timestamp(996);
     send(test_direct_u64);
 
     // 测试被间接包含的 non-string 字段:
-    auto& test_indirect_u64 = *arena->CreateMessage<rbk4::Message_Laser>(arena);
+    auto& test_indirect_u64 = *arena.CreateMessage<rbk4::Message_Laser>(&arena);
     test_indirect_u64.mutable_header()->set_timestamp(007);
     send(test_indirect_u64);
 
     // 测试被间接包含的 repeated 字段:
-    auto& test_indirect_repeared = *arena->CreateMessage<rbk4::Message_Laser>(arena);
+    auto& test_indirect_repeared = *arena.CreateMessage<rbk4::Message_Laser>(&arena);
     for (auto i = 0; i != 10; ++i) {
         const auto beam = test_indirect_repeared.add_beams();
         beam->set_angle(i * 10),
