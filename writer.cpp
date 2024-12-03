@@ -55,10 +55,20 @@ int main() {
 
     // 测试被间接包含的 repeated 字段:
     auto& test_indirect_repeared = *arena.CreateMessage<rbk4::Message_Laser>(&arena);
-    for (auto i = 0; i != 10; ++i) {
+    for (auto i = 0; i != 3; ++i) {
         const auto beam = test_indirect_repeared.add_beams();
         beam->set_angle(i * 10),
         beam->set_valid(i % 2);
     }
     send(test_indirect_repeared);
+}
+
+
+#include <capnp/message.h>
+#include "./laser.capnp.h"
+
+void test_capn() {
+    capnp::MallocMessageBuilder msg{};
+    rbk4::MessageHeader::Builder header = msg.initRoot<rbk4::MessageHeader>();
+
 }

@@ -36,9 +36,9 @@ reader-%.o: reader-%.cpp ipc0cp.hpp $(PB_MSGS).pb.h
 
 .PHONY: clean
 clean:
-	rm -f ?*.exe
-	rm -f ?*.o
-	rm -f ?*.pb.{h,cc}
+	rm -f  ?*.exe
+	rm -f  ?*.o
+	rm -f  ?*.pb.{h,cc}  ?*.capnp.{h,c++}
 
 .PHONY: git
 git:
@@ -47,6 +47,7 @@ git:
 	git commit -a -v
 	git push
 
-.PHONY: protobuf
-protobuf:
+.PHONY: proto
+proto:
 	protoc --cpp_out=. ?*.proto
+	capnp compile -oc++ ?*.capnp
