@@ -2,9 +2,9 @@
 #include <sys/stat.h>  // fstat
 #include <fcntl.h>  // O_{CREAT,RDWR,RDONLY}
 #include <cassert>
-#include <google/protobuf/arena.h>
 #include <unistd.h>  // ftruncate
 #include <string_view>
+#include <string>
 
 
 // Writer 和 readers 需要事先约定好共享内存的位置:
@@ -18,7 +18,7 @@ template<bool creat = false>
 struct ShM {
     const std::string name;
     void *const start;  // 共享内存要映射到进程地址空间的位置.
-    std::size_t len = 4096;  // 只有 writer 关心 length.
+    std::size_t len = 4096;  // 只有 writer 需要关心 length.
 
     ShM(const std::string_view name, void *const start): name{name}, start{start} {
         const auto fd = [name=this->name.c_str()]{

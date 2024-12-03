@@ -1,5 +1,6 @@
 #include "./ipc0cp.hpp"
 #include "./laser.pb.h"
+#include <google/protobuf/arena.h>
 
 #include <cstdio>
 #include <type_traits>
@@ -7,17 +8,17 @@
 
 ShM<true> shm{INIT_OPTIONS.shm_name, INIT_OPTIONS.map_at};
 
-void send(const auto *const msg) {
-    std::fprintf(stderr, "writer: 开始写 %p\n", msg);
+void send(const auto& msg) {
+    std::fprintf(stderr, "writer: 开始写 %p\n", &msg);
 
     // 把 msg 的 offset 放在 shm[32] 处:
     *static_cast<std::size_t *>(shm.start + 32)
-        = reinterpret_cast<char *>(const_cast<std::decay_t<decltype(*msg)> *>(msg))
+        = reinterpret_cast<char *>(const_cast<std::decay_t<decltype(msg)> *>(&msg))
           - reinterpret_cast<char *>(shm.start);
 
     static_cast<volatile std::uint8_t&>(shm[0]) = 1;  // 告诉 reader 可以读数据了.
 
-    std::fprintf(stderr, "writer: 写好了 %p\n", msg);
+    std::fprintf(stderr, "writer: 写好了 %p\n", &msg);
 
     // 等 reader 读完.
     while (static_cast<volatile std::uint8_t&>(shm[0]))
@@ -43,19 +44,19 @@ int main() {
     }()};
 
     // 测试被直接包含的 non-string 字段:
-    const auto test_direct_u64 = arena->CreateMessage<rbk4::Message_Header>(arena);
-    test_direct_u64->set_timestamp(996);
+    auto& test_direct_u64 = *arena->CreateMessage<rbk4::Message_Header>(arena);
+    test_direct_u64.set_timestamp(996);
     send(test_direct_u64);
 
     // 测试被间接包含的 non-string 字段:
-    const auto test_indirect_u64 = arena->CreateMessage<rbk4::Message_Laser>(arena);
-    test_indirect_u64->mutable_header()->set_timestamp(007);
+    auto& test_indirect_u64 = *arena->CreateMessage<rbk4::Message_Laser>(arena);
+    test_indirect_u64.mutable_header()->set_timestamp(007);
     send(test_indirect_u64);
 
     // 测试被间接包含的 repeated 字段:
-    const auto test_indirect_repeared = arena->CreateMessage<rbk4::Message_Laser>(arena);
+    auto& test_indirect_repeared = *arena->CreateMessage<rbk4::Message_Laser>(arena);
     for (auto i = 0; i != 10; ++i) {
-        const auto beam = test_indirect_repeared->add_beams();
+        const auto beam = test_indirect_repeared.add_beams();
         beam->set_angle(i * 10),
         beam->set_valid(i % 2);
     }
