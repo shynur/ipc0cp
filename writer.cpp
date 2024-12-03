@@ -5,7 +5,7 @@
 #include <type_traits>
 
 
-ShM shm{INIT_OPTIONS.shm_name, INIT_OPTIONS.map_at, true};
+ShM<true> shm{INIT_OPTIONS.shm_name, INIT_OPTIONS.map_at};
 
 void send(const auto *const msg) {
     std::fprintf(stderr, "writer: 开始写 %p\n", msg);
@@ -46,8 +46,6 @@ int main() {
     const auto test_direct_u64 = arena->CreateMessage<rbk4::Message_Header>(arena);
     test_direct_u64->set_timestamp(996);
     send(test_direct_u64);
-    test_direct_u64->bs();
-    test_direct_u64->channel();
 
     // 测试被间接包含的 non-string 字段:
     const auto test_indirect_u64 = arena->CreateMessage<rbk4::Message_Laser>(arena);

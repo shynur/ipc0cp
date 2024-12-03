@@ -4,35 +4,35 @@
 #include <cassert>
 #include <google/protobuf/arena.h>
 #include <unistd.h>  // ftruncate
+#include <string_view>
 
 
 // Writer 和 readers 需要事先约定好共享内存的位置:
-constexpr struct {const char *const shm_name; void *const map_at;} INIT_OPTIONS{
-    .shm_name = "/Wryyyyyy",
-    .map_at = static_cast<void *>(nullptr) + 0x500000u,
-};
+constexpr struct {
+    const char *const shm_name = "/Wryyyyyy"; 
+    void *const map_at = static_cast<void *>(nullptr) + 0x500000u;
+} INIT_OPTIONS{};
 
 
+template<bool creat = false>
 struct ShM {
     const std::string name;
     void *const start;  // 共享内存要映射到进程地址空间的位置.
     std::size_t len = 4096;  // 只有 writer 关心 length.
-    const bool constructed_by_writer;
 
-    ShM(const std::string name, void *const start, const bool is_writer = false)
-        : name{name}, start{start}, constructed_by_writer{is_writer} {
-        const auto fd 
-          = is_writer 
-            ? shm_open(name.c_str(), O_CREAT | O_RDWR, 0666)
-            : [&name]{
+    ShM(const std::string_view name, void *const start): name{name}, start{start} {
+        const auto fd = [name=this->name.c_str()]{
+            if constexpr (creat)
+                return shm_open(name, O_CREAT | O_RDWR, 0666);
+            else
                 // 忙等, 直到 writer 创建好共享内存.
                 while (true)
-                    if (const auto fd = shm_open(name.c_str(), O_RDWR, 0666); fd != -1)
+                    if (const auto fd = shm_open(name, O_RDWR, 0666); fd != -1)
                         return fd;
-            }();
+        }();
         assert("创建共享内存" && fd != -1);
 
-        if (is_writer) {
+        if constexpr (creat) {
             const auto result_resize = ftruncate(fd, this->len);
             assert("设置共享内存大小" && result_resize != -1);
         } else  // 等待 writer 设置好共享内存的大小.
@@ -49,7 +49,7 @@ struct ShM {
     }
 
     ~ShM() {
-        if (this->constructed_by_writer)
+        if constexpr (creat)
             shm_unlink(this->name.c_str());
             // 此后, 新的 `shm_open' 尝试都将失败;
             // 当所有 mmap 都取消映射后, 共享内存将被 deallocate.
