@@ -10,3 +10,5 @@
 
 ?*.pb.h
 ?*.pb.cc
+?*.capnp.h
+?*.capnp.cpp

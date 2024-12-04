@@ -3,10 +3,10 @@ CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -O0 -ggdb -g3  \
 		   -fconcepts  \
            -Wno-pointer-arith -Wno-return-type -Wno-unused-parameter
-LDFLAGS = -lrt -lprotobuf
+LDFLAGS = -lrt -lprotobuf  # -lcapnp -lkj -lcapnp-json
 
 READERS = reader-1
-PB_MSGS = laser
+MESSAGES = laser
 
 
 .PHONY: test
@@ -18,20 +18,23 @@ test:  writer.exe $(READERS).exe
 	done
 	./writer.exe  ||  true
 
-writer.exe:  writer.o $(PB_MSGS).pb.o
+writer.exe:  writer.o               $(MESSAGES).pb.o $(MESSAGES).capnp.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-$(READERS).exe:  $(READERS).o $(PB_MSGS).pb.o
+$(READERS).exe:  $(READERS).o       $(MESSAGES).pb.o $(MESSAGES).capnp.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-writer.o:  writer.cpp ipc0cp.hpp $(PB_MSGS).pb.h
+writer.o:  writer.cpp ipc0cp.hpp    $(MESSAGES).pb.h $(MESSAGES).capnp.h
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 
-reader-%.o: reader-%.cpp ipc0cp.hpp $(PB_MSGS).pb.h
+reader-%.o: reader-%.cpp ipc0cp.hpp $(MESSAGES).pb.h $(MESSAGES).capnp.h
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 
-%.pb.h %.pb.cc: %.proto
-	make protobuf
+$(MESSAGES).pb.h    $(MESSAGES).pb.cc: $(MESSAGES).proto
+	protoc --cpp_out=. $<
+$(MESSAGES).capnp.h $(MESSAGES).capnp.cpp:
+	capnp compile -oc++ $(MESSAGES).capnp
+	mv $(MESSAGES).capnp.{c++,cpp}
 
 
 .PHONY: clean

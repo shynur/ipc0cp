@@ -45,10 +45,8 @@ struct ShM {
         close(fd);  // 映射完立即关闭, 对后续操作没啥影响.
         assert("映射共享内存" && result_mmap != MAP_FAILED);
 
-        // 实际不需要清零, 因为 `ftruncate' 自带清零行为.
+        // 实际不需要清零.
         std::memset(start, 0, this->len);
-        // 但在测试的时候, 可能出现因 bug 导致 reader/writer 未能退出,
-        // 持续写入新的数据, 扰乱测试结果.  所以暂且留着.
     }
 
     ~ShM() {

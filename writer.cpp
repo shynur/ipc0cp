@@ -12,7 +12,7 @@ void send(const auto& msg) {
     std::fprintf(stderr, "writer: 开始写 %p\n", &msg);
 
     // 把 msg 的 offset 放在 shm[32] 处:
-    *static_cast<std::size_t *>(shm.start + 32)
+    reinterpret_cast<std::size_t&>(shm[32])
         = reinterpret_cast<char *>(const_cast<std::decay_t<decltype(msg)> *>(&msg))
           - reinterpret_cast<char *>(shm.start);
 
@@ -63,12 +63,18 @@ int main() {
     send(test_indirect_repeared);
 }
 
-
+/*
 #include <capnp/message.h>
+#include <capnp/compat/json.h>
 #include "./laser.capnp.h"
 
 void test_capn() {
-    capnp::MallocMessageBuilder msg{};
-    rbk4::MessageHeader::Builder header = msg.initRoot<rbk4::MessageHeader>();
+    auto header = capnp::MallocMessageBuilder{}
+                                                  .initRoot<rbk4::MessageHeader>();
+    header.setChannel("123456789"),
+    header.setTimestamp(996);
 
+    auto json = capnp::JsonCodec{}.encode(header);
+    std::cerr << "Cap'n: " << json.cStr() <<'\n';
 }
+*/
