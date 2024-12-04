@@ -1,12 +1,19 @@
 #include "./ipc0cp.hpp"
 #include "./laser.pb.h"
 #include <google/protobuf/arena.h>
+#include <capnp/message.h>
+#include "./laser.capnp.h"
 
+#include <thread>
 #include <cstdio>
 #include <type_traits>
 
 
+using namespace std::chrono_literals;
+
+
 ShM<true> shm{INIT_OPTIONS.shm_name, INIT_OPTIONS.map_at};
+
 
 void send(const auto& msg) {
     std::fprintf(stderr, "writer: 开始写 %p\n", &msg);
@@ -14,7 +21,7 @@ void send(const auto& msg) {
     // 把 msg 的 offset 放在 shm[32] 处:
     reinterpret_cast<std::size_t&>(shm[32])
         = reinterpret_cast<char *>(const_cast<std::decay_t<decltype(msg)> *>(&msg))
-          - reinterpret_cast<char *>(shm.start);
+          - static_cast<char *>(shm+0);
 
     static_cast<volatile std::uint8_t&>(shm[0]) = 1;  // 告诉 reader 可以读数据了.
 
@@ -25,13 +32,13 @@ void send(const auto& msg) {
         continue;
 }
 
-int main() {
+void test_protobuf() {
     // Arena 放到 shm[256] 处.
-    auto& arena = *new(&shm[256]) google::protobuf::Arena{[]{
+    auto& arena = *new(shm + 256) google::protobuf::Arena{[]{
         google::protobuf::ArenaOptions options;
 
         // 把 shm[512+] 的区域分配给 Arena.
-        options.initial_block = reinterpret_cast<char *>(&shm[512]),
+        options.initial_block = static_cast<char *>(shm + 512),
         options.initial_block_size = shm.len - 512;
 
         constexpr auto never = +[] [[noreturn]] { 
@@ -63,18 +70,20 @@ int main() {
     send(test_indirect_repeared);
 }
 
-/*
-#include <capnp/message.h>
-#include <capnp/compat/json.h>
-#include "./laser.capnp.h"
+void test_capnproto();
 
-void test_capn() {
-    auto header = capnp::MallocMessageBuilder{}
-                                                  .initRoot<rbk4::MessageHeader>();
-    header.setChannel("123456789"),
+int main() {
+    test_capnproto();
+    std::this_thread::sleep_for(0.5s);
+}
+
+void test_capnproto() {
+    auto& header
+        = reinterpret_cast<decltype(capnp::MallocMessageBuilder{}.initRoot<rbk4::MessageHeader>())&>(shm[256]) 
+        = capnp::MallocMessageBuilder{kj::ArrayPtr{static_cast<capnp::word *>(shm + 512), 100}}
+          .initRoot<rbk4::MessageHeader>();
+    header.setChannel("123"),
     header.setTimestamp(996);
 
-    auto json = capnp::JsonCodec{}.encode(header);
-    std::cerr << "Cap'n: " << json.cStr() <<'\n';
+    std::cerr << "post: " << header.toString().flatten().cStr() <<'\n';
 }
-*/

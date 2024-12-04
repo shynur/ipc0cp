@@ -3,7 +3,7 @@ CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -O0 -ggdb -g3  \
 		   -fconcepts  \
            -Wno-pointer-arith -Wno-return-type -Wno-unused-parameter
-LDFLAGS = -lrt -lprotobuf  # -lcapnp -lkj -lcapnp-json
+LDFLAGS = -lpthread -lrt -lprotobuf -lcapnp -lkj -lcapnp-json
 
 READERS = reader-1
 MESSAGES = laser

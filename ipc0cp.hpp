@@ -3,9 +3,14 @@
 #include <fcntl.h>  // O_{CREAT,RDWR,RDONLY}
 #include <cassert>
 #include <unistd.h>  // ftruncate
-#include <string_view>
 #include <string>
 #include <cstring>
+#include <iostream>
+#include <future>
+#include <chrono>
+
+
+using namespace std::chrono_literals;
 
 
 // Writer 和 readers 需要事先约定好共享内存的位置:
@@ -21,16 +26,22 @@ struct ShM {
     void *const start;  // 共享内存要映射到进程地址空间的位置.
     std::size_t len = 4096;  // 只有 writer 需要关心 length; 必须是页表大小的整数倍.
 
-    ShM(const std::string_view name, void *const start): name{name}, start{start} {
-        const auto fd = [name=this->name.c_str()]{
-            if constexpr (creat)
-                return shm_open(name, O_CREAT | O_RDWR, 0666);
-            else
-                // 忙等, 直到 writer 创建好共享内存.
-                while (true)
-                    if (const auto fd = shm_open(name, O_RDWR, 0666); fd != -1)
-                        return fd;
-        }();
+    ShM(const std::string name, void *const start): name{name}, start{start} {
+        const auto fd
+            = creat
+              ? shm_open(name.c_str(), O_CREAT | O_RDWR, 0666)
+              : [&name]{
+                  std::future opening = std::async(std::launch::async, [&name]{
+                      // 忙等, 直到 writer 创建好共享内存.
+                      while (true)
+                          if (const auto fd = shm_open(name.c_str(), O_RDWR, 0666); fd != -1)
+                              return fd;
+                  });
+                  if (opening.wait_for(1s) == std::future_status::ready)
+                      return opening.get();
+                  else
+                      assert("reader: 打开 shm 失败, 因为 writer 执行太快提前退出了" && false);
+              }();
         assert("创建共享内存" && fd != -1);
 
         if constexpr (creat) {
@@ -44,9 +55,6 @@ struct ShM {
         const auto *const result_mmap = mmap(start, this->len, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, fd, 0);
         close(fd);  // 映射完立即关闭, 对后续操作没啥影响.
         assert("映射共享内存" && result_mmap != MAP_FAILED);
-
-        // 实际不需要清零.
-        std::memset(start, 0, this->len);
     }
 
     ~ShM() {
@@ -62,4 +70,5 @@ struct ShM {
         assert(i < this->len);
         return static_cast<std::uint8_t *>(this->start)[i];
     }
+    void *operator+(const std::ptrdiff_t i) const { return &(*this)[i]; }
 };

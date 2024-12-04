@@ -1,6 +1,8 @@
 #include "./ipc0cp.hpp"
 #include "./laser.pb.h"
 #include <google/protobuf/util/json_util.h>
+#include <capnp/message.h>
+#include "./laser.capnp.h"
 
 #include <iostream>
 #include <cstdio>
@@ -17,12 +19,19 @@ template <class protobuf_msg_t> const protobuf_msg_t& receive() {
     const auto offset = *static_cast<std::size_t *>(shm.start + 32);
     static_cast<volatile std::uint8_t&>(shm[0]) = 0;  // 告诉 writer 我读完了.
 
-    const auto& msg = *static_cast<protobuf_msg_t *>(shm.start + offset);
+    const auto& msg = reinterpret_cast<protobuf_msg_t&>(shm[offset]);
     std::fprintf(stderr, "reader: 读好了 %p\n", &msg);
     return msg;
 }
 
 int main() {
+    const auto& header 
+        = reinterpret_cast<decltype(capnp::MallocMessageBuilder{}.initRoot<rbk4::MessageHeader>())&>(shm[256]);
+
+    std::cerr << "get: " << header.toString().flatten().cStr() <<'\n';
+}
+
+void test_protobuf() {
     static std::string JSON;
 
     std::fprintf(stderr, "%lu\n\n", 
