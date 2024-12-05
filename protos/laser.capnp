@@ -1,7 +1,7 @@
 @0x9691ca7b27c42ac5;
 
 using Cxx = import "/capnp/c++.capnp";
-$Cxx.namespace("rbk4");
+$Cxx.namespace("rbk");
 
 
 struct MessageLaser {

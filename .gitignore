@@ -5,10 +5,16 @@
 
 /.vscode/
 
-?*.o
-?*.exe
+/bin/
 
-?*.pb.h
-?*.pb.cc
-?*.capnp.h
-?*.capnp.cpp
+/include/flatbuffers/
+
+/include/?*.pb.h
+/src/?*.pb.cc
+
+/include/?*.capnp.h
+/src/?*.capnp.cpp
+
+/include/?*-by-flatc.hpp
+
+/obj/

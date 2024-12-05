@@ -2,46 +2,51 @@ SHELL = bash
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -O0 -ggdb -g3  \
 		   -fconcepts  \
+		   -Iinclude  \
            -Wno-pointer-arith -Wno-return-type -Wno-unused-parameter
-LDFLAGS = -lpthread -lrt -lprotobuf -lcapnp -lkj -lcapnp-json
+LDFLAGS = -lpthread -lrt
 
 READERS = reader-1
-MESSAGES = laser
+PROTO = laser
+
+SRCDIR = src
+INCDIR = include
+OBJDIR = obj
+BINDIR = bin
 
 
 .PHONY: test
 .SILENT: test
-test:  writer.exe $(READERS).exe
+test:  bin/writer.exe bin/$(READERS).exe
 	echo
 	for reader in $(READERS); do  \
-	    ./$$reader.exe &          \
+	    bin/$$reader.exe &        \
 	done
-	./writer.exe  ||  true
+	bin/writer.exe
 
-writer.exe:  writer.o               $(MESSAGES).pb.o $(MESSAGES).capnp.o
+bin/writer.exe:  obj/writer.o
+	mkdir -p bin
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-$(READERS).exe:  $(READERS).o       $(MESSAGES).pb.o $(MESSAGES).capnp.o
+bin/$(READERS).exe:  obj/$(READERS).o
+	mkdir -p bin
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-writer.o:  writer.cpp ipc0cp.hpp    $(MESSAGES).pb.h $(MESSAGES).capnp.h
+obj/writer.o:  src/writer.cpp include/ipc0cp.hpp include/$(PROTO)-by-flatc.hpp
+	mkdir -p obj
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 
-reader-%.o: reader-%.cpp ipc0cp.hpp $(MESSAGES).pb.h $(MESSAGES).capnp.h
+obj/reader-%.o: src/reader-%.cpp include/ipc0cp.hpp include/$(PROTO)-by-flatc.hpp
+	mkdir -p obj
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 
-$(MESSAGES).pb.h    $(MESSAGES).pb.cc: $(MESSAGES).proto
-	protoc --cpp_out=. $<
-$(MESSAGES).capnp.h $(MESSAGES).capnp.cpp:
-	capnp compile -oc++ $(MESSAGES).capnp
-	mv $(MESSAGES).capnp.{c++,cpp}
-
+include/$(PROTO)-by-flatc.hpp: protos/$(PROTO).fbs
+	make proto
 
 .PHONY: clean
 clean:
-	rm -f  ?*.exe
-	rm -f  ?*.o
-	rm -f  ?*.pb.{h,cc}  ?*.capnp.{h,c++}
+	rm -rf  bin/ obj/
+	rm -f   include/?*-by-flatc.hpp
 
 .PHONY: git
 git:
@@ -52,5 +57,5 @@ git:
 
 .PHONY: proto
 proto:
-	protoc --cpp_out=. ?*.proto
-	capnp compile -oc++ ?*.capnp
+	flatc --gen-mutable --reflect-names --cpp protos/$(PROTO).fbs
+	[ $$? -eq 0 ]  &&  mv $(PROTO)_generated.h include/$(PROTO)-by-flatc.hpp

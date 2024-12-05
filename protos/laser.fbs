@@ -1,0 +1,20 @@
+namespace rbk;
+
+ 
+table MessageLaser {
+  header : MessageHeader;
+  beams : [MessageBeam];
+}
+
+table MessageHeader {
+  channel : string;
+  timestamp : uint64;
+}
+
+table MessageBeam {
+  angle : float32;
+  valid : bool;
+}
+
+
+root_type MessageLaser;

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option cc_enable_arenas = true;
+
+package rbk;
+
+
+message MessageLaser {
+  MessageHeader header = 1;
+  repeated MessageBeam beams = 5;
+}
+
+message MessageHeader {
+  string channel = 1;
+  uint64 timestamp = 3;
+}
+
+message MessageBeam {
+  float angle = 1;
+  bool valid = 6;
+}
