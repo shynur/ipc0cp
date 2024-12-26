@@ -29,7 +29,7 @@ struct IPCator_flatbuf: flatbuffers::Allocator {
 
 
 struct Descriptor {
-    std::array<char, 248> shm_name;
+    std::array<char, 247> shm_name;
     const std::size_t offset;
     Descriptor(const std::string_view shm_name, const std::ptrdiff_t offset)
     : shm_name{}, offset{offset + 0uz} {
