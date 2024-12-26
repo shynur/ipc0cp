@@ -1,7 +1,7 @@
 生成 proto 定义:
 
 ```bash
-make protob
+make proto
 ```
 
 直接测试:
