@@ -1,20 +1,9 @@
-# Emacs-generated:
 ?*~
 .#?*#
 #?*#
-
 /.vscode/
 
 /bin/
-
-/include/flatbuffers/
-
-/include/?*.pb.h
-/src/?*.pb.cc
-
-/include/?*.capnp.h
-/src/?*.capnp.cpp
-
-/include/?*-by-flatc.hpp
-
 /obj/
+
+/include/?*.fbs.hpp

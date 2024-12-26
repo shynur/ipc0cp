@@ -1,15 +1,13 @@
-生成 protobuf 定义:
+生成 proto 定义:
 
 ```bash
-make protobuf
+make protob
 ```
 
 直接测试:
 
 ```bash
-make
-# 或
-make test
+make run
 ```
 
 清理, 使仓库恢复原样:

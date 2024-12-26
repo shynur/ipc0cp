@@ -1,28 +1,21 @@
 SHELL = bash
-CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O0 -ggdb -g3  \
-		   -fconcepts  \
-		   -Iinclude  \
-           -Wno-pointer-arith -Wno-return-type -Wno-unused-parameter
+CXX = $(shell echo $${CXX:-g++}) -fdiagnostics-color=always -std=c++26
+CXXFLAGS = -Wall -W -O0 -ggdb -g3 -Iinclude
 LDFLAGS = -lpthread -lrt
 
 READERS = reader-1
 PROTO = laser
 
-SRCDIR = src
-INCDIR = include
-OBJDIR = obj
-BINDIR = bin
 
-
-.PHONY: test
-.SILENT: test
-test:  bin/writer.exe bin/$(READERS).exe
-	echo
+.PHONY: run
+.SILENT: run
+run:  bin/writer.exe bin/$(READERS).exe
+	rm -f /dev/shm/ipc0cp-*?
+	bin/writer.exe &
 	for reader in $(READERS); do  \
 	    bin/$$reader.exe &        \
 	done
-	bin/writer.exe
+	wait
 
 bin/writer.exe:  obj/writer.o
 	mkdir -p bin
@@ -32,21 +25,22 @@ bin/$(READERS).exe:  obj/$(READERS).o
 	mkdir -p bin
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-obj/writer.o:  src/writer.cpp include/ipc0cp.hpp include/$(PROTO)-by-flatc.hpp
+obj/writer.o:  src/writer.cpp include/ipc0cp.hpp include/$(PROTO).fbs.hpp
 	mkdir -p obj
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 
-obj/reader-%.o: src/reader-%.cpp include/ipc0cp.hpp include/$(PROTO)-by-flatc.hpp
+obj/reader-%.o: src/reader-%.cpp include/ipc0cp.hpp include/$(PROTO).fbs.hpp
 	mkdir -p obj
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 
-include/$(PROTO)-by-flatc.hpp: protos/$(PROTO).fbs
+include/$(PROTO).fbs.hpp: protos/$(PROTO).fbs
 	make proto
+
 
 .PHONY: clean
 clean:
 	rm -rf  bin/ obj/
-	rm -f   include/?*-by-flatc.hpp
+	rm -f   include/?*.fbs.hpp
 
 .PHONY: git
 git:
@@ -58,4 +52,4 @@ git:
 .PHONY: proto
 proto:
 	flatc --gen-mutable --reflect-names --cpp protos/$(PROTO).fbs
-	[ $$? -eq 0 ]  &&  mv $(PROTO)_generated.h include/$(PROTO)-by-flatc.hpp
+	[ $$? -eq 0 ]  &&  mv $(PROTO)_generated.h include/$(PROTO).fbs.hpp
