@@ -24,8 +24,8 @@ int main() {
                        ->last_inserted;
     new (std::data(name_passer)) Descriptor{
         target_shm.get_name(),
-        buf - std::to_address(std::cbegin(target_shm)),
+        buf - std::to_address(std::begin(target_shm)),
     };
     auto _ = "/ipc0cp-writer-done"_shm[1];
-    auto _ = +"/ipc0cp-reader-done"_shm;
+    +"/ipc0cp-reader-done"_shm;
 }

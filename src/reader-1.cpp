@@ -7,10 +7,10 @@ auto rd = ShM_Reader{};
 
 int main() {
     std::setbuf(stdout, 0);
-    auto _ = +"/ipc0cp-writer-done"_shm;
+    +"/ipc0cp-writer-done"_shm;
     auto objd = rd.template read<Descriptor>("/ipc0cp-target-name"sv, 0);
     auto pobj = &rd.template read<std::uint8_t>(
-        std::string_view{objd.shm_name},
+        std::string_view{objd.shm_name.data()},
         objd.offset
     );
     auto _ = "/ipc0cp-reader-done"_shm[1];

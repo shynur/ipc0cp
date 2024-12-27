@@ -1,5 +1,5 @@
 SHELL = bash
-CXX = $(shell echo $${CXX:-g++}) -fdiagnostics-color=always -std=c++26
+CXX = $(shell echo $${CXX:-g++}) -fdiagnostics-color=always -std=c++$(shell echo $${ISOCXX:-26})
 CXXFLAGS = -Wall -W -O0 -ggdb -g3 -Iinclude
 LDFLAGS = -lpthread -lrt
 
