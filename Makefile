@@ -1,7 +1,7 @@
 SHELL = bash
-CXX = $(shell echo $${CXX:-g++}) -fdiagnostics-color=always -std=c++$(shell echo $${ISOCXX:-26})
-CXXFLAGS = -Wall -W -O0 -ggdb -g3 -Iinclude
-LDFLAGS = -lpthread -lrt
+CXX = $(shell echo $${CXX:-g++}) -std=c++$(shell echo $${ISOCXX:-26})
+CXXFLAGS = -Wall -W -Wpedantic -O0 -g3 -Iinclude
+LDFLAGS = -lrt
 
 READERS = reader-1
 PROTO = laser
