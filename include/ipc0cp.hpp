@@ -1,6 +1,7 @@
 #include "ipcator.hpp"
 #include "flatbuffers/flatbuffers.h"
 
+
 #define IPC0CP_LOG_ALLO_OR_DEALLOC(color)  void(  \
     std::clog <<  \
         std::source_location::current().function_name() + "\n"s  \
@@ -10,6 +11,7 @@
             std::make_format_args(size, (const void *const&)area)  \
         ) + '\n'  \
 )
+
 
 template <IPCator ipcator_t>
 struct IPCator_flatbuf: flatbuffers::Allocator {
