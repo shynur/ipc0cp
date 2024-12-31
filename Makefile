@@ -9,33 +9,35 @@ LDFLAGS = -lrt -pthread $(if $(LIBS), -l$(LIBS))
 READERS = reader-1
 PROTO = laser
 
+BUILD_INFO = $(shell basename `echo $(CXX) | awk -F' ' '{printf $$1}'`)-C++$(shell echo $${ISOCPP:-26})
+
 # ----------------------------------------------------------
 
 .PHONY: run
-run:  bin/writer.exe bin/$(READERS).exe
+run:  bin/writer-$(BUILD_INFO).exe  bin/$(READERS)-$(BUILD_INFO).exe
 	rm -f /dev/shm/*ipc0cp-*? /dev/shm/*ipcator-*?
 	for exe in $^; do  \
 	    (./$$exe; echo) &  \
 	done
 	wait
 
-bin/writer.exe:  obj/writer.o  $(LIBDIRS)
+bin/writer-$(BUILD_INFO).exe:  obj/writer-$(BUILD_INFO).o  $(LIBDIRS)
 	mkdir -p bin
 	$(CXX) $< $(LIBFLAGS) $(LDFLAGS) -o $@
 
-bin/reader-%.exe:  obj/reader-%.o  $(LIBDIRS)
+bin/reader-%-$(BUILD_INFO).exe:  obj/reader-%-$(BUILD_INFO).o  $(LIBDIRS)
 	mkdir -p bin
 	$(CXX) $< $(LIBFLAGS) $(LDFLAGS) -o $@
 
-obj/writer.o:  src/writer.cpp include/ipc0cp.hpp include/$(PROTO).fbs.hpp
+obj/writer-$(BUILD_INFO).o:  src/writer.cpp  include/ipc0cp.hpp  include/$(PROTO).fbs.hpp
 	mkdir -p obj
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 
-obj/reader-%.o: src/reader-%.cpp include/ipc0cp.hpp include/$(PROTO).fbs.hpp
+obj/reader-%-$(BUILD_INFO).o:  src/reader-%.cpp  include/ipc0cp.hpp  include/$(PROTO).fbs.hpp
 	mkdir -p obj
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 
-include/%.fbs.hpp: protos/%.fbs
+include/%.fbs.hpp:  protos/%.fbs
 	make proto
 
 lib/fmt-build/:  lib/fmt-build/libfmt.a
@@ -57,8 +59,8 @@ git:
 
 .PHONY: proto
 proto:
-	flatc --gen-mutable --reflect-names --cpp protos/$(PROTO).fbs
-	(($$?==0)) && mv $(PROTO)_generated.h include/$(PROTO).fbs.hpp
+	flatc `#--gen-mutable` --reflect-names --cpp protos/$(PROTO).fbs
+	(($$?==0))  &&  mv $(PROTO)_generated.h include/$(PROTO).fbs.hpp
 
 .PHONY: print-vars
 print-vars:
@@ -69,3 +71,4 @@ print-vars:
 	@echo LIBDIRS = $(LIBDIRS)
 	@echo LIBFLAGS = $(LIBFLAGS)
 	@echo LDFLAGS = $(LDFLAGS)
+	@echo BUILD_INFO = $(BUILD_INFO)
