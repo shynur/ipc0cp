@@ -15,11 +15,12 @@ BUILD_INFO = $(shell basename `echo $(CXX) | awk -F' ' '{printf $$1}'`)-C++$(she
 
 .PHONY: run
 run:  bin/writer-$(BUILD_INFO).exe  bin/$(READERS)-$(BUILD_INFO).exe
-	rm -f /dev/shm/*ipc0cp-*? /dev/shm/*ipcator-*?
+	ls -al /dev/shm/
 	for exe in $^; do  \
-	    (./$$exe; echo) &  \
-	done
+	    (((`id -u`)) && ./$$exe || nice -n -20 ./$$exe; echo) &  \
+	done;  \
 	wait
+	rm -f /dev/shm/*ipc0cp-?* /dev/shm/*ipcator-?*
 
 bin/writer-$(BUILD_INFO).exe:  obj/writer-$(BUILD_INFO).o  $(LIBDIRS)
 	mkdir -p bin
