@@ -15,28 +15,39 @@ BUILD_INFO = $(shell basename `echo $(CXX) | awk -F' ' '{printf $$1}'`)-C++$(she
 
 .PHONY: run
 run:  bin/writer-$(BUILD_INFO).exe  bin/$(READERS)-$(BUILD_INFO).exe
-	ls -al /dev/shm/
+	ls -l --almost-all --color=always /dev/shm/
 	for exe in $^; do  \
-	    (((`id -u`)) && ./$$exe || nice -n -20 ./$$exe; echo) &  \
+	    (((`id -u`))  \
+			 && ./$$exe  \
+			 || (echo '以 `sudo nice` 执行'; nice -n -20 ./$$exe); \
+			 echo) &  \
 	done;  \
 	wait
 	rm -f /dev/shm/*ipc0cp-?* /dev/shm/*ipcator-?*
 
 bin/writer-$(BUILD_INFO).exe:  obj/writer-$(BUILD_INFO).o  $(LIBDIRS)
 	mkdir -p bin
+	chmod a+rwx bin  ||  true
 	$(CXX) $< $(LIBFLAGS) $(LDFLAGS) -o $@
+	chmod a+x $@  ||  true
 
 bin/reader-%-$(BUILD_INFO).exe:  obj/reader-%-$(BUILD_INFO).o  $(LIBDIRS)
 	mkdir -p bin
+	chmod a+rwx bin  ||  true
 	$(CXX) $< $(LIBFLAGS) $(LDFLAGS) -o $@
+	chmod a+x $@  ||  true
 
 obj/writer-$(BUILD_INFO).o:  src/writer.cpp  include/ipc0cp.hpp  include/$(PROTO).fbs.hpp
 	mkdir -p obj
+	chmod a+rwx obj  ||  true
 	$(CXX) -c $(CXXFLAGS) $< -o $@
+	chmod a+x $@  ||  true
 
 obj/reader-%-$(BUILD_INFO).o:  src/reader-%.cpp  include/ipc0cp.hpp  include/$(PROTO).fbs.hpp
 	mkdir -p obj
+	chmod a+rwx obj  ||  true
 	$(CXX) -c $(CXXFLAGS) $< -o $@
+	chmod a+x $@  ||  true
 
 include/%.fbs.hpp:  protos/%.fbs
 	make proto
