@@ -1,12 +1,12 @@
 namespace rbk;
 
 table MessageLaser {
+  timestamp : uint64;
   header : MessageHeader;
-  beams : [MessageBeam];
 }
 table MessageHeader {
   channel : string;
-  timestamp : uint64;
+  beams : [MessageBeam];
 }
 table MessageBeam {
   angle : float32;

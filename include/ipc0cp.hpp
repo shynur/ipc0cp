@@ -3,7 +3,7 @@
 
 
 #define IPC0CP_LOG_ALLO_OR_DEALLOC(color)  void(  \
-    std::clog <<  \
+    DEBUG && std::clog <<  \
         std::source_location::current().function_name() + "\n"s  \
         + std::vformat(  \
             (color == "green"sv ? "\033[32m" : "\033[31m")  \
@@ -39,3 +39,6 @@ struct Descriptor {
             this->shm_name[i] = shm_name[i];
     }
 };
+
+
+constexpr auto num_to_send = 1'0;

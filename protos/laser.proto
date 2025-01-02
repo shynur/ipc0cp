@@ -2,12 +2,12 @@ syntax = "proto3";
 package rbk;
 
 message MessageLaser {
+  uint64 timestamp = 3;
   MessageHeader header = 1;
-  repeated MessageBeam beams = 5;
 }
 message MessageHeader {
   string channel = 1;
-  uint64 timestamp = 3;
+  repeated MessageBeam beams = 5;
 }
 message MessageBeam {
   float angle = 1;
