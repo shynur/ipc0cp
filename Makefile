@@ -7,7 +7,6 @@ LIBDIRS = $(if $(LIBS),./lib/$(LIBS)-build/)
 LIBFLAGS = $(if $(LIBS), -L$(LIBDIRS))
 LDFLAGS = -lrt -pthread $(if $(LIBS), -l$(LIBS))
 
-READERS = reader-1
 PROTO = laser
 
 BUILD_INFO = $(if $(DEBUG),beta,rc)-$(shell basename `echo $(CXX) | awk -F' ' '{printf $$1}'`)-C++$(shell echo $${ISOCPP:-26})
@@ -15,7 +14,8 @@ BUILD_INFO = $(if $(DEBUG),beta,rc)-$(shell basename `echo $(CXX) | awk -F' ' '{
 # ----------------------------------------------------------
 
 .PHONY: run
-run:  bin/writer-$(BUILD_INFO).exe  bin/$(READERS)-$(BUILD_INFO).exe
+run:  bin/writer-$(BUILD_INFO).exe  \
+      bin/reader-1-$(BUILD_INFO).exe bin/reader-2-$(BUILD_INFO).exe bin/reader-3-$(BUILD_INFO).exe
 	ls -l --almost-all --color=always /dev/shm/
 	rm -f /dev/shm/*ipc0cp-?* /dev/shm/*ipcator-?*
 	for exe in $^; do  \

@@ -41,4 +41,5 @@ struct Descriptor {
 };
 
 
-constexpr auto num_to_send = 1'0;
+constexpr auto num_readers = 3;
+constexpr auto num_to_send = 5'0;

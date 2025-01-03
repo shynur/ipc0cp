@@ -11,7 +11,7 @@ std::atomic_ref flag{
 void add_epoch_then_send(auto& builder, const auto& obj) {
     builder.Finish(rbk::CreateMessageLaser(
         builder,
-        std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::high_resolution_clock::now().time_since_epoch()
         ).count(),
         obj
@@ -26,23 +26,22 @@ void add_epoch_then_send(auto& builder, const auto& obj) {
         buf - std::to_address(std::begin(target_shm)),
     };
 
-    flag.store(1, std::memory_order_release);
-    while (flag.load(std::memory_order_acquire) == 1)
+    flag.store(~(-1 << num_readers), std::memory_order_release);
+    while (flag.load(std::memory_order_acquire))
         continue;
 }
 
 int main() {
-    std::setbuf(stdout, 0);
     std::this_thread::sleep_for(0.15s);
 
     for (auto _ : std::views::iota(0) | std::views::take(num_to_send)) {
-        auto builder = flatbuffers::FlatBufferBuilder{256, &flatbuf_allocator};
+        auto builder = flatbuffers::FlatBufferBuilder{65536, &flatbuf_allocator};
         // builder.ForceDefaults(true);
         auto beams = builder.CreateVector(std::vector{
             rbk::CreateMessageBeam(builder, 9.96, false),
         });
         auto header = rbk::CreateMessageHeader(
-            builder, builder.CreateString("1! 5!  Bro here rap for U~"), beams
+            builder, builder.CreateString(std::string(30'000, '6')), beams
         );
         add_epoch_then_send(builder, header);
     }

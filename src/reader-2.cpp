@@ -22,12 +22,12 @@ int main() {
             std::string_view{objd.shm_name.data()},
             objd.offset
         );
-        auto at_read = std::chrono::high_resolution_clock::now();  // 应该排除该语句的执行时间.
         flag.fetch_sub(1 << reader_id, std::memory_order_release);  // 应该排除该语句的执行时间.
         /* const auto json = flatbuffers::FlatBufferToString(
             pobj,
             rbk::MessageLaserTypeTable()
         ); */
+        auto at_read = std::chrono::high_resolution_clock::now();  // 应该排除该语句的执行时间.
 
         auto at_send = rbk::GetMessageLaser(pobj)->timestamp();
         std::cout << __FILE__ + ": after "s
@@ -36,7 +36,7 @@ int main() {
                             at_read.time_since_epoch()
                         ).count() - at_send
                     ) + "us... "
-                 // + "\033[96m"
+                // + "\033[96m"
                  // + json
                  // + "\033[0m"
                   + '\n';
