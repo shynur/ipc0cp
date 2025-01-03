@@ -2,11 +2,11 @@
 #include "ipcator.hpp"
 #include "laser.fbs.hpp"
 
-auto name_passer = "/ipc0cp-target"_shm[sizeof(Descriptor)];
-auto flatbuf_allocator = IPCator_flatbuf<Monotonic_ShM_Buffer>{};
 std::atomic_ref flag{
     *(unsigned char *)map_shm<true>("/ipc0cp-shm-atom", 1u)
 };
+auto name_passer = "/ipc0cp-target"_shm[sizeof(Descriptor)];
+auto flatbuf_allocator = IPCator_flatbuf<Monotonic_ShM_Buffer>{};
 
 void add_epoch_then_send(auto& builder, const auto& obj) {
     builder.Finish(rbk::CreateMessageLaser(
@@ -32,8 +32,6 @@ void add_epoch_then_send(auto& builder, const auto& obj) {
 }
 
 int main() {
-    std::this_thread::sleep_for(0.15s);
-
     for (auto _ : std::views::iota(0) | std::views::take(num_to_send)) {
         auto builder = flatbuffers::FlatBufferBuilder{65536, &flatbuf_allocator};
         // builder.ForceDefaults(true);
