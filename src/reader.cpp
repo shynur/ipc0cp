@@ -6,8 +6,10 @@
 constexpr auto reader_id = __FILE__[sizeof(__FILE__)-6] - '1';
 
 auto rd = ShM_Reader{};
+char final_output[BUFSIZ];
 
 int main() {
+    std::setbuf(stdout, final_output);
     std::cout.sync_with_stdio(false);
     std::this_thread::sleep_for(10ms);
     std::atomic_ref flag{
@@ -23,23 +25,21 @@ int main() {
             std::string_view{objd.shm_name.data()},
             objd.offset
         );
-        auto at_read = std::chrono::high_resolution_clock::now();  // 应该排除该语句的执行时间.
-        flag.fetch_sub(1 << reader_id, std::memory_order_release);  // 应该排除该语句的执行时间.
-        /* const auto json = flatbuffers::FlatBufferToString(
+        /*const auto json = flatbuffers::FlatBufferToString(
             pobj,
             rbk::MessageLaserTypeTable()
-        ); */
+        );*/
+        auto at_read = std::chrono::high_resolution_clock::now();  // 应该排除该语句的执行时间.
 
         auto at_send = rbk::GetMessageLaser(pobj)->timestamp();
-        std::cout << __FILE__ + ": after "s
-                  + std::to_string(
+        std::cout << __FILE__ << ": after "
+                  << std::to_string(
                         std::chrono::duration_cast<std::chrono::microseconds>(
                             at_read.time_since_epoch()
                         ).count() - at_send
-                    ) + "us... "
-                // + "\033[96m"
-                 // + json
-                 // + "\033[0m"
-                  + '\n';
+                    ) << "us... "
+                  // + "\033[96m" + json + "\033[0m"
+                  << '\n';
+        flag.fetch_sub(1 << reader_id, std::memory_order_release);  // 应该排除该语句的执行时间.
     }
 }

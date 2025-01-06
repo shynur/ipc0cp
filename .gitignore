@@ -6,6 +6,7 @@
 
 /bin/
 /obj/
+/src/reader-?.cpp
 
 /include/?*.fbs.hpp
 /lib/?*-build/

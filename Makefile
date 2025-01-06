@@ -7,6 +7,7 @@ LIBDIRS = $(if $(LIBS),./lib/$(LIBS)-build/)
 LIBFLAGS = $(if $(LIBS), -L$(LIBDIRS))
 LDFLAGS = -lrt -pthread $(if $(LIBS), -l$(LIBS))
 
+READERS = $(shell bash -c "echo reader-{1..`cat include/ipc0cp.hpp | grep 'num_readers =' - | awk -F'= |;' '{printf $$2}'`}")
 PROTO = laser
 
 BUILD_INFO = $(if $(DEBUG),beta,rc)-$(shell basename `echo $(CXX) | awk -F' ' '{printf $$1}'`)-C++$(shell echo $${ISOCPP:-26})
@@ -14,18 +15,20 @@ BUILD_INFO = $(if $(DEBUG),beta,rc)-$(shell basename `echo $(CXX) | awk -F' ' '{
 # ----------------------------------------------------------
 
 .PHONY: run
-run:  bin/writer-$(BUILD_INFO).exe  \
-      bin/reader-1-$(BUILD_INFO).exe bin/reader-2-$(BUILD_INFO).exe bin/reader-3-$(BUILD_INFO).exe
+run:  bin/writer-$(BUILD_INFO).exe  $(addprefix bin/,$(addsuffix -$(BUILD_INFO).exe,$(READERS)))
 	ls -l --almost-all --color=always /dev/shm/
 	rm -f /dev/shm/*ipc0cp-?* /dev/shm/*ipcator-?*
 	for exe in $^; do  \
-	  (  \
-	    if ((`id -u` == 0)); then  \
-	      echo '以 `sudo nice` 执行';  \
-	      nice -n -20 ./$$exe;  \
-	    else  \
-	      ./$$exe;  \
-	    fi;  \
+	  ( if echo $$exe | grep writer - > /dev/null; then  \
+        nice -n 19 ./$$exe;  \
+      else  \
+	      if ((`id -u` == 0)); then  \
+  	      echo "以 \`sudo nice\` 执行 \`$$exe\`";  \
+	        nice -n -20 ./$$exe;  \
+	      else  \
+	        ./$$exe;  \
+	      fi;  \
+      fi;  \
 	    echo  \
 	  ) &  \
 	done;  \
@@ -35,27 +38,31 @@ run:  bin/writer-$(BUILD_INFO).exe  \
 
 bin/writer-$(BUILD_INFO).exe:  obj/writer-$(BUILD_INFO).o  $(LIBDIRS)
 	mkdir -p bin
-	chmod a+rwx bin  ||  true
+	chmod -R a+rwx bin  ||  true
 	$(CXX) $< $(LIBFLAGS) $(LDFLAGS) -o $@
 	chmod a+x $@  ||  true
 
 bin/reader-%-$(BUILD_INFO).exe:  obj/reader-%-$(BUILD_INFO).o  $(LIBDIRS)
 	mkdir -p bin
-	chmod a+rwx bin  ||  true
+	chmod -R a+rwx bin  ||  true
 	$(CXX) $< $(LIBFLAGS) $(LDFLAGS) -o $@
 	chmod a+x $@  ||  true
 
 obj/writer-$(BUILD_INFO).o:  src/writer.cpp  include/ipc0cp.hpp  include/$(PROTO).fbs.hpp
 	mkdir -p obj
-	chmod a+rwx obj  ||  true
+	chmod -R a+rwx obj  ||  true
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 	chmod a+x $@  ||  true
 
 obj/reader-%-$(BUILD_INFO).o:  src/reader-%.cpp  include/ipc0cp.hpp  include/$(PROTO).fbs.hpp
 	mkdir -p obj
-	chmod a+rwx obj  ||  true
+	chmod -R a+rwx obj  ||  true
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 	chmod a+x $@  ||  true
+
+src/reader-%.cpp: src/reader.cpp
+	cp -f $< $@
+	chmod a+rw $@  ||  true
 
 include/%.fbs.hpp:  protos/%.fbs
 	make proto
@@ -85,6 +92,7 @@ proto:
 
 .PHONY: print-vars
 print-vars:
+	@echo READERS = $(READERS)
 	@echo CXX = $(CXX)
 	@echo DEBUG = $(DEBUG)
 	@echo CXXFLAGS = $(CXXFLAGS)

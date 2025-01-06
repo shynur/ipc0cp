@@ -35,11 +35,12 @@ int main() {
     for (auto _ : std::views::iota(0) | std::views::take(num_to_send)) {
         auto builder = flatbuffers::FlatBufferBuilder{65536, &flatbuf_allocator};
         // builder.ForceDefaults(true);
-        auto beams = builder.CreateVector(std::vector{
-            rbk::CreateMessageBeam(builder, 9.96, false),
-        });
         auto header = rbk::CreateMessageHeader(
-            builder, builder.CreateString(std::string(30'000, '6')), beams
+            builder,
+            builder.CreateString(std::string(30'000, '6')),
+            builder.CreateVector(std::vector{
+              rbk::CreateMessageBeam(builder, 9.96, false),
+            })
         );
         add_epoch_then_send(builder, header);
     }
