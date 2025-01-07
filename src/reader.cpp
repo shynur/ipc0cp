@@ -13,7 +13,7 @@ int main() {
     std::cout.sync_with_stdio(false);
     std::this_thread::sleep_for(10ms);
     std::atomic_ref flag{
-        *(unsigned char *)map_shm<false, true>("/ipc0cp-shm-atom").addr
+        *(unsigned char *)map_shm<false>("/ipc0cp-shm-atom").addr
     };
 
     for (auto _ : std::views::iota(0) | std::views::take(num_to_send)) {
