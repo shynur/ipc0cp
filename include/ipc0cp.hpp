@@ -31,7 +31,12 @@ struct IPCator_flatbuf: flatbuffers::Allocator {
 
 
 struct Descriptor {
-    std::array<char, 248> shm_name;
+    std::array<
+        char,
+        248
+    // ^^^^^ 分配器生成的共享内存的默认路径的长度, 足够长
+    // 所以不可能发生碰撞, 但仍能使 Descriptor 按 256 bytes 对齐.
+    > shm_name;
     const std::size_t offset;
     Descriptor(const std::string_view shm_name, const std::ptrdiff_t offset)
     : shm_name{}, offset(offset) {
@@ -41,5 +46,5 @@ struct Descriptor {
 };
 
 
-constexpr auto num_readers = 1;
-constexpr auto num_to_send = 5'0;
+constexpr auto num_readers = 3;
+constexpr auto num_to_send = 20;

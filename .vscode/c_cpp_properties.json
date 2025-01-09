@@ -6,8 +6,8 @@
                 "${workspaceFolder}/include/**"
             ],
             "defines": [],
-            "compilerPath": "/usr/local/bin/g++",
-            "cStandard": "c17",
+            "compilerPath": "/usr/local/bin/g++-15",
+            "cppStandard": "c++23",
             "intelliSenseMode": "linux-gcc-x64",
             "compilerArgs": [
                 "-std=c++26",

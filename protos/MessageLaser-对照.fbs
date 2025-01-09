@@ -1,3 +1,5 @@
+// 用来和 flatc 根据 protobuf 自动生成的 flatbuf schema 进行对照比较.
+
 namespace rbk;
 
 table MessageLaser {

@@ -1,6 +1,6 @@
 #include "ipc0cp.hpp"
 #include "ipcator.hpp"
-#include "laser.fbs.hpp"
+#include "MessageLaser.fbs.hpp"
 #include "flatbuffers/minireflect.h"
 
 constexpr auto reader_id = __FILE__[sizeof(__FILE__)-6] - '1';
@@ -13,7 +13,7 @@ int main() {
     std::cout.sync_with_stdio(false);
     std::this_thread::sleep_for(10ms);
     std::atomic_ref flag{
-        *(unsigned char *)map_shm<false>("/ipc0cp-shm-atom").addr
+        (*new Shared_Memory<false, true>{"/ipc0cp-shm-atom"})[0]
     };
 
     for (auto _ : std::views::iota(0) | std::views::take(num_to_send)) {

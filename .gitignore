@@ -9,4 +9,9 @@
 /src/reader-?.cpp
 
 /include/?*.fbs.hpp
+
+/protos/?*.fbs
+!/protos/?*-对照.fbs
+
 /lib/?*-build/
+/lib/archives/

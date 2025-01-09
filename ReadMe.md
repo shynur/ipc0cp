@@ -1,7 +1,9 @@
+要求使用 `g++-10` (及以上) 或 `clang++-16` (及以上).
+
 ```bash
-make run  # 直接测试
+make  # 直接测试
 make clean  # 清理, 使仓库恢复原样
-sudo make run  # 以高优先级运行测试进程
+sudo make  # 以高优先级运行测试进程 以降低轮询的延迟
 ```
 
 ```bash

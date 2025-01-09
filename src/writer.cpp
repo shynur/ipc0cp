@@ -1,9 +1,9 @@
 #include "ipc0cp.hpp"
 #include "ipcator.hpp"
-#include "laser.fbs.hpp"
+#include "MessageLaser.fbs.hpp"
 
 std::atomic_ref flag{
-    *(unsigned char *)map_shm<true>("/ipc0cp-shm-atom", 1u)
+    (*new Shared_Memory{"/ipc0cp-shm-atom", 1})[0]
 };
 auto name_passer = "/ipc0cp-target"_shm[sizeof(Descriptor)];
 auto flatbuf_allocator = IPCator_flatbuf<Monotonic_ShM_Buffer>{};
